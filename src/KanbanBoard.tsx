@@ -8,11 +8,10 @@ interface Task {
   id: string;
   title: string;
   column: string;
+  project?: string;
 }
 
 const pb = new PocketBase("https://pb.dydev.art");
-
-console.log(pb);
 
 export default function KanbanBoard() {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -44,11 +43,22 @@ export default function KanbanBoard() {
   return (
     <DndContext collisionDetection={closestCorners} onDragEnd={handleDragEnd}>
       <div className="flex gap-4 p-4 overflow-x-auto min-h-screen bg-gray-100">
-        {columns.map((column) => (
-          <SortableContext key={column} items={tasks.filter((t) => t.column === column)} strategy={verticalListSortingStrategy}>
-            <Column title={column} tasks={tasks.filter((t) => t.column === column)} />
-          </SortableContext>
-        ))}
+        {columns.map((column) => {
+          const tasksByProject = tasks
+            .filter((task) => task.column === column)
+            .reduce((acc, task) => {
+              const project = task.project || "No Project";
+              if (!acc[project]) acc[project] = [];
+              acc[project].push(task);
+              return acc;
+            }, {} as Record<string, Task[]>);
+
+          return (
+            <SortableContext key={column} items={Object.values(tasksByProject).flat()} strategy={verticalListSortingStrategy}>
+              <Column title={column} tasksByProject={tasksByProject} />
+            </SortableContext>
+          );
+        })}
       </div>
     </DndContext>
   );
