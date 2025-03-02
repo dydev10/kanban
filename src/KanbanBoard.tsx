@@ -11,15 +11,41 @@ interface Task {
   project?: string;
 }
 
+enum TaskColumns {
+  TODO = "todo",
+  IN_PROGRESS = "in_progress",
+  DONE = "done",
+};
+
 const pb = new PocketBase("https://pb.dydev.art");
+
+const { PB_USER, PB_PASS } = process.env;
+
+const loginUser = async () => {
+  await pb.collection('users').authWithPassword(
+    PB_USER ?? "",
+    PB_PASS ?? "",
+  );
+};
 
 export default function KanbanBoard() {
   const [tasks, setTasks] = useState<Task[]>([]);
-  const columns: string[] = ["todo", "in-progress", "done"];
+  const [isAuthed, setIsAuthed] = useState<boolean>(false);
+  const columns: string[] = Object.values(TaskColumns);
 
   useEffect(() => {
-    fetchTasks();
+    const init = async () => {
+      await loginUser();
+      setIsAuthed(true);
+    }
+    init();
   }, []);
+
+  useEffect(() => {
+    if (isAuthed) {
+      fetchTasks();
+    }
+  }, [isAuthed]);
 
   async function fetchTasks() {
     const records = await pb.collection("tasks").getFullList<Task>();
