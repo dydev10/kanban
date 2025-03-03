@@ -16,8 +16,8 @@ const LoginForm: FC<ModalProps> = ({ isOpen, onClose, onComplete }) => {
 
   const handleComplete = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log("Email:", email);
-    console.log("Password:", password);
+    // console.log("Email:", email);
+    // console.log("Password:", password);
     onComplete({
       email,
       password,
