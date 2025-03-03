@@ -6,6 +6,7 @@ import LoginForm from "./LoginForm";
 import { Board, LoginCredentials, Project, Task, TaskColumns } from "./types";
 import pb, { checkSession, getUserId, loginUser } from "./api/pb";
 import AddTaskForm from "./AddTaskForm";
+import HeaderBar from "./HeaderBar";
 
 export default function KanbanBoard() {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -137,45 +138,48 @@ export default function KanbanBoard() {
   }
 
   return (
-    <div className="p-4">
-      <div className="mb-4 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <label>Select Board:</label>
-          <select onChange={switchBoard} value={selectedBoard || ""}>
-            {boards.map((board) => (
-              <option key={board.id} value={board.id}>{board.name}</option>
-            ))}
-          </select>
+    <div>
+      <HeaderBar />
+      <div className="p-4">
+        <div className="mb-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <label>Select Board:</label>
+            <select onChange={switchBoard} value={selectedBoard || ""}>
+              {boards.map((board) => (
+                <option key={board.id} value={board.id}>{board.name}</option>
+              ))}
+            </select>
+          </div>
+          <button onClick={createRandomTask} className="px-3 py-1 bg-blue-500 text-white rounded">+ Task Random</button>
+          <AddTaskForm onAdd={addTask} projects={projects} />
         </div>
-        <button onClick={createRandomTask} className="px-3 py-1 bg-blue-500 text-white rounded">+ Task Random</button>
-        <AddTaskForm onAdd={addTask} projects={projects} />
+
+        <DndContext collisionDetection={closestCorners} onDragEnd={handleDragEnd} onDragOver={handleDragOver}>
+          <div className="flex gap-4 p-4 overflow-x-auto min-h-screen bg-gray-100">
+            {columns.map((column) => {
+              const tasksByProject = tasks
+                .filter((task) => task.column === column)
+                .reduce((acc, task) => {                
+                  const project = projects.find(p => p.id === task.project)?.title || "No Project";
+                  if (!acc[project]) acc[project] = [];
+                  acc[project].push(task);
+                  return acc;
+                }, {} as Record<string, Task[]>);
+
+              return (
+                <SortableContext id={column} key={column} items={Object.values(tasksByProject).flat()} strategy={verticalListSortingStrategy}>
+                  <Column
+                    title={column}
+                    tasksByProject={tasksByProject}
+                    isHovered={hoveredColumn === column}
+                    onDeleteTask={handleDeleteTask}  
+                  />
+                </SortableContext>
+              );
+            })}
+          </div>
+        </DndContext>
       </div>
-
-      <DndContext collisionDetection={closestCorners} onDragEnd={handleDragEnd} onDragOver={handleDragOver}>
-        <div className="flex gap-4 p-4 overflow-x-auto min-h-screen bg-gray-100">
-          {columns.map((column) => {
-            const tasksByProject = tasks
-              .filter((task) => task.column === column)
-              .reduce((acc, task) => {                
-                const project = projects.find(p => p.id === task.project)?.title || "No Project";
-                if (!acc[project]) acc[project] = [];
-                acc[project].push(task);
-                return acc;
-              }, {} as Record<string, Task[]>);
-
-            return (
-              <SortableContext id={column} key={column} items={Object.values(tasksByProject).flat()} strategy={verticalListSortingStrategy}>
-                <Column
-                  title={column}
-                  tasksByProject={tasksByProject}
-                  isHovered={hoveredColumn === column}
-                  onDeleteTask={handleDeleteTask}  
-                />
-              </SortableContext>
-            );
-          })}
-        </div>
-      </DndContext>
     </div>
   );
 }

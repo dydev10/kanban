@@ -3,6 +3,12 @@ export type LoginCredentials = {
   password: string,
 };
 
+export interface User {
+  id: string;
+  username?: string;
+  email: string;
+}
+
 export interface Board {
   id: string;
   name: string;
