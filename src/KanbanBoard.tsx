@@ -4,7 +4,7 @@ import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import Column from "./Column";
 import LoginForm from "./LoginForm";
 import { Board, LoginCredentials, Project, Task, TaskColumns } from "./types";
-import pb, { checkSession, loginUser } from "./api/pb";
+import pb, { checkSession, getUserId, loginUser } from "./api/pb";
 import AddTaskForm from "./AddTaskForm";
 
 export default function KanbanBoard() {
@@ -87,6 +87,8 @@ export default function KanbanBoard() {
     await pb.collection("tasks").create({
       title: "New Random Task #" + Math.floor(Math.random() * 1000),
       column: "todo",
+      project: null,
+      user: getUserId(),
       board: selectedBoard
     });
     fetchTasks(selectedBoard);
@@ -98,6 +100,7 @@ export default function KanbanBoard() {
       title,
       column,
       project,
+      user: getUserId(),
       board: selectedBoard
     });
     fetchTasks(selectedBoard);

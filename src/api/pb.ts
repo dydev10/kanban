@@ -10,6 +10,10 @@ export const loginUser = async (creds: LoginCredentials) => {
   );
 };
 
+export const getUserId = () => {
+  return pb.authStore.record?.id;
+};
+
 export const checkSession = () => {
   return pb.authStore.isValid;
 };
