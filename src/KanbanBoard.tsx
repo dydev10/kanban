@@ -131,8 +131,8 @@ export default function KanbanBoard() {
       <div className="p-4 grow flex flex-col">
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <label>Select Board:</label>
-            <select onChange={switchBoard} value={selectedBoard || ""}>
+            <label className="font-light">Select Board:</label>
+            <select onChange={switchBoard} value={selectedBoard || ""} className="font-bold font-mono text-lg">
               {boards.map((board) => (
                 <option key={board.id} value={board.id}>{board.name}</option>
               ))}

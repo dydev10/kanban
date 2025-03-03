@@ -45,6 +45,6 @@ body {
   100% { background-position: 0% 50% }
 }
 
-button {
+button, select {
   cursor: pointer;
 }

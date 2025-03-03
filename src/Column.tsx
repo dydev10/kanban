@@ -32,7 +32,7 @@ const Column: FC<ColumnProps> = ({ title, tasksByProject, isHovered, onDeleteTas
 
   return (
     <div ref={setNodeRef} className={`${isHovered ? "bg-orange-200" : "bg-gray-200"} w-72 bg-gray-200 p-4 rounded-lg shadow-md`}>
-      <h2 className="text-lg font-bold mb-2">{title}</h2>
+      <h2 className="text-xl text-gray-700 font-bold mb-4">{title}</h2>
       <div className="space-y-2">
         {Object.entries(tasksByProject).map(([project, tasks]) => (
           <div key={project} className="bg-white rounded-lg shadow p-2">
