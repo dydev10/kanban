@@ -10,4 +10,8 @@ export const loginUser = async (creds: LoginCredentials) => {
   );
 };
 
+export const checkSession = () => {
+  return pb.authStore.isValid;
+};
+
 export default pb;

@@ -4,11 +4,11 @@ import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import Column from "./Column";
 import LoginForm from "./LoginForm";
 import { Board, LoginCredentials, Task, TaskColumns } from "./types";
-import pb, { loginUser } from "./api/pb";
+import pb, { checkSession, loginUser } from "./api/pb";
 
 export default function KanbanBoard() {
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [isAuthed, setIsAuthed] = useState<boolean>(false);
+  const [isAuthed, setIsAuthed] = useState<boolean>(checkSession());
   const [isGuest, setIsGuest] = useState<boolean>(false);
   const [selectedBoard, setSelectedBoard] = useState<string | null>(null);
   const [boards, setBoards] = useState<Board[]>([]);
