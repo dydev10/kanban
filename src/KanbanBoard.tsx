@@ -1,5 +1,5 @@
 import { ChangeEvent, useCallback, useEffect, useState } from "react";
-import { DndContext, closestCorners, DragEndEvent } from "@dnd-kit/core";
+import { DndContext, closestCorners, DragEndEvent, DragOverEvent } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import Column from "./Column";
 import LoginForm from "./LoginForm";
@@ -9,12 +9,14 @@ import AddTaskForm from "./AddTaskForm";
 
 export default function KanbanBoard() {
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [boards, setBoards] = useState<Board[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
+  
   const [isAuthed, setIsAuthed] = useState<boolean>(checkSession());
   const [isGuest, setIsGuest] = useState<boolean>(false);
   const [selectedBoard, setSelectedBoard] = useState<string | null>(null);
-  const [boards, setBoards] = useState<Board[]>([]);
-  const [projects, setProjects] = useState<Project[]>([]);
   const columns: string[] = Object.values(TaskColumns);
+  const [hoveredColumn, setHoveredColumn] = useState<string | null>(null);
 
   const fetchBoards = useCallback(async () => {
     const records = await pb.collection("boards").getFullList<Board>();
@@ -42,9 +44,19 @@ export default function KanbanBoard() {
     await pb.collection("tasks").update(id, updates);
     if (selectedBoard) fetchTasks(selectedBoard);
   }
+
+  function handleDragOver(event: DragOverEvent) {
+    const { over } = event;
+    if (over) {
+      setHoveredColumn(over.id as string);
+    }
+  }
+
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
     if (!over) return;
+
+    setHoveredColumn(null);
 
     const taskId = active.id as string;
     const newColumn = over.id as string;
@@ -123,7 +135,7 @@ export default function KanbanBoard() {
         <AddTaskForm onAdd={addTask} projects={projects} />
       </div>
 
-      <DndContext collisionDetection={closestCorners} onDragEnd={handleDragEnd}>
+      <DndContext collisionDetection={closestCorners} onDragEnd={handleDragEnd} onDragOver={handleDragOver}>
         <div className="flex gap-4 p-4 overflow-x-auto min-h-screen bg-gray-100">
           {columns.map((column) => {
             const tasksByProject = tasks
@@ -137,7 +149,7 @@ export default function KanbanBoard() {
 
             return (
               <SortableContext key={column} items={Object.values(tasksByProject).flat()} strategy={verticalListSortingStrategy}>
-                <Column title={column} tasksByProject={tasksByProject} />
+                <Column title={column} tasksByProject={tasksByProject} isHovered={hoveredColumn === column} />
               </SortableContext>
             );
           })}

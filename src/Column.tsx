@@ -12,9 +12,10 @@ interface Task {
 interface ColumnProps {
   title: string;
   tasksByProject: Record<string, Task[]>;
+  isHovered: boolean;
 }
 
-const Column: FC<ColumnProps> = ({ title, tasksByProject }) => {
+const Column: FC<ColumnProps> = ({ title, tasksByProject, isHovered }) => {
   const { setNodeRef } = useDroppable({ id: title });
   // const [openProject, setOpenProject] = useState<string | null>(null);
   const [collapsedProjects, setCollapsedProjects] = useState<string[]>([]);
@@ -29,7 +30,7 @@ const Column: FC<ColumnProps> = ({ title, tasksByProject }) => {
   };
 
   return (
-    <div ref={setNodeRef} className="w-72 bg-gray-200 p-4 rounded-lg shadow-md">
+    <div ref={setNodeRef} className={`${isHovered ? "bg-orange-200" : "bg-gray-200"} w-72 bg-gray-200 p-4 rounded-lg shadow-md`}>
       <h2 className="text-lg font-bold mb-2">{title}</h2>
       <div className="space-y-2">
         {Object.entries(tasksByProject).map(([project, tasks]) => (
