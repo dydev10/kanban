@@ -37,7 +37,7 @@ const Column: FC<ColumnProps> = ({ title, tasksByProject, isHovered, onDeleteTas
         {Object.entries(tasksByProject).map(([project, tasks]) => (
           <div key={project} className="bg-white rounded-lg shadow p-2">
             <button
-              className="w-full text-left font-semibold p-2 bg-gray-300 rounded"
+              className="w-full text-left font-semibold px-2 py-1 bg-gray-300 rounded"
               onClick={() => toggleProject(project)}
             >
               {project} ({tasks.length})
