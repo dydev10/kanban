@@ -83,18 +83,6 @@ export default function KanbanBoard() {
     fetchTasks(newBoard);
   }
 
-  async function createRandomTask() {
-    if (!selectedBoard) return;
-    await pb.collection("tasks").create({
-      title: "New Random Task #" + Math.floor(Math.random() * 1000),
-      column: "todo",
-      project: null,
-      user: getUserId(),
-      board: selectedBoard
-    });
-    fetchTasks(selectedBoard);
-  }
-
   async function addTask(title: string, column: string, project?: string) {
     if (!selectedBoard) return;
     await pb.collection("tasks").create({
@@ -150,7 +138,6 @@ export default function KanbanBoard() {
               ))}
             </select>
           </div>
-          <button onClick={createRandomTask} className="px-3 py-1 bg-blue-500 text-white rounded">+ Task Random</button>
           <AddTaskForm onAdd={addTask} projects={projects} />
         </div>
 
