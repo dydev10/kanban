@@ -4,20 +4,28 @@ import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import Column from "./Column";
 import LoginForm from "./LoginForm";
 import { Board, LoginCredentials, Project, Task, TaskColumns } from "./types";
-import pb, { checkSession, getUserId, loginUser } from "./api/pb";
 import AddTaskForm from "./AddTaskForm";
 import HeaderBar from "./HeaderBar";
+import usePocket from "./hooks/usePocket";
 
 export default function KanbanBoard() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [boards, setBoards] = useState<Board[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   
-  const [isAuthed, setIsAuthed] = useState<boolean>(checkSession());
+  const { pb, login, token, user } = usePocket();
+
   const [isGuest, setIsGuest] = useState<boolean>(false);
   const [selectedBoard, setSelectedBoard] = useState<string | null>(null);
   const columns: string[] = Object.values(TaskColumns);
   const [hoveredColumn, setHoveredColumn] = useState<string | null>(null);
+
+  const fetchTasks = useCallback(async (boardId: string) => {
+    const records = await pb.collection("tasks").getFullList<Task>({
+      filter: `board = "${boardId}"`
+    });
+    setTasks(records);
+  }, [pb]);
 
   const fetchBoards = useCallback(async () => {
     const records = await pb.collection("boards").getFullList<Board>();
@@ -26,20 +34,13 @@ export default function KanbanBoard() {
       setSelectedBoard(records[0].id);
       fetchTasks(records[0].id);
     }
-  }, []); 
+  }, [pb, fetchTasks]); 
 
-  async function fetchProjects() {
+  const fetchProjects = useCallback(async () => {
     const records = await pb.collection("projects").getFullList<Project>();
     setProjects(records);
-  };
-  
+  }, [pb]);
 
-  async function fetchTasks(boardId: string) {
-    const records = await pb.collection("tasks").getFullList<Task>({
-      filter: `board = "${boardId}"`
-    });
-    setTasks(records);
-  }
 
   async function updateTask(id: string, updates: Partial<Task>) {
     await pb.collection("tasks").update(id, updates);
@@ -71,8 +72,7 @@ export default function KanbanBoard() {
 
   function handleLoginRequest(creds: LoginCredentials) {
     console.log('Trying to login...');
-    loginUser(creds).then((user) => {
-      setIsAuthed(true);
+    login(creds.email, creds.password).then((user) => {
       console.log('Logged In user:', user);
     });
   };
@@ -84,12 +84,12 @@ export default function KanbanBoard() {
   }
 
   async function addTask(title: string, column: string, project?: string) {
-    if (!selectedBoard) return;
+    if (!selectedBoard || !user) return;
     await pb.collection("tasks").create({
       title,
       column,
       project,
-      user: getUserId(),
+      user: user.id,
       board: selectedBoard
     });
     fetchTasks(selectedBoard);
@@ -109,13 +109,13 @@ export default function KanbanBoard() {
   }
 
   useEffect(() => {
-    if (isAuthed) {
+    if (token) {
       fetchBoards();
       fetchProjects();
     }
-  }, [isAuthed, fetchBoards]);
+  }, [token, fetchBoards, fetchProjects]);
 
-  if (!isAuthed && !isGuest) {
+  if (!token && !isGuest) {
     return (
       <LoginForm
         isOpen

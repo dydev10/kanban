@@ -1,15 +1,14 @@
 import { useState } from "react";
 import { FaChevronDown, FaSignOutAlt, FaCog } from "react-icons/fa";
-import pb from "./api/pb";
-import { User } from "./types";
+import usePocket from "./hooks/usePocket";
 
 
 export default function HeaderBar() {
-  const user = pb.authStore.record as User | null;
+  const { user, logout } = usePocket();
   const [isOpen, setIsOpen] = useState<boolean>(false);
 
   function handleLogout() {
-    pb.authStore.clear();
+    logout();
     window.location.reload();
   }
 
