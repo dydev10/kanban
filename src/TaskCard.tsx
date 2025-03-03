@@ -27,7 +27,7 @@ const TaskCard: FC<TaskCardProps> = ({ task, onDelete }) => {
       {...listeners}
       {...attributes}
       style={{ transform: transform ? `translate(${transform.x}px, ${transform.y}px)` : undefined }}
-      className="bg-white text-emerald-900 flex justify-between items-center p-3 rounded-md shadow-md cursor-pointer"
+      className="bg-blue-50 text-emerald-900 flex justify-between items-center p-3 rounded-md shadow-md cursor-pointer"
     >
       <span>{task.title}</span>
       <button
