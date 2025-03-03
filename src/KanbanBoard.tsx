@@ -90,13 +90,15 @@ export default function KanbanBoard() {
 
   return (
     <div className="p-4">
-      <div className="mb-4 flex items-center gap-2">
-        <label>Select Board:</label>
-        <select onChange={switchBoard} value={selectedBoard || ""}>
-          {boards.map((board) => (
-            <option key={board.id} value={board.id}>{board.name}</option>
-          ))}
-        </select>
+      <div className="mb-4 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <label>Select Board:</label>
+          <select onChange={(e) => setSelectedBoard(e.target.value)} value={selectedBoard || ""}>
+            {boards.map((board) => (
+              <option key={board.id} value={board.id}>{board.name}</option>
+            ))}
+          </select>
+        </div>
         <button onClick={createTask} className="px-3 py-1 bg-blue-500 text-white rounded">+ Add Task</button>
       </div>
 
