@@ -106,6 +106,19 @@ export default function KanbanBoard() {
     fetchTasks(selectedBoard);
   }
 
+  async function deleteTask(taskId: string) {
+    return pb.collection("tasks").delete(taskId);
+  }
+
+  function handleDeleteTask(taskId: string) {
+    deleteTask(taskId).then(() => {
+      console.log('Deleted Task!');
+      
+      if (!selectedBoard) return;
+      fetchTasks(selectedBoard);
+    });
+  }
+
   useEffect(() => {
     if (isAuthed) {
       fetchBoards();
@@ -151,8 +164,13 @@ export default function KanbanBoard() {
               }, {} as Record<string, Task[]>);
 
             return (
-              <SortableContext key={column} items={Object.values(tasksByProject).flat()} strategy={verticalListSortingStrategy}>
-                <Column title={column} tasksByProject={tasksByProject} isHovered={hoveredColumn === column} />
+              <SortableContext id={column} key={column} items={Object.values(tasksByProject).flat()} strategy={verticalListSortingStrategy}>
+                <Column
+                  title={column}
+                  tasksByProject={tasksByProject}
+                  isHovered={hoveredColumn === column}
+                  onDeleteTask={handleDeleteTask}  
+                />
               </SortableContext>
             );
           })}

@@ -13,9 +13,10 @@ interface ColumnProps {
   title: string;
   tasksByProject: Record<string, Task[]>;
   isHovered: boolean;
+  onDeleteTask: (taskId: string) => void;
 }
 
-const Column: FC<ColumnProps> = ({ title, tasksByProject, isHovered }) => {
+const Column: FC<ColumnProps> = ({ title, tasksByProject, isHovered, onDeleteTask }) => {
   const { setNodeRef } = useDroppable({ id: title });
   // const [openProject, setOpenProject] = useState<string | null>(null);
   const [collapsedProjects, setCollapsedProjects] = useState<string[]>([]);
@@ -44,7 +45,7 @@ const Column: FC<ColumnProps> = ({ title, tasksByProject, isHovered }) => {
             {!collapsedProjects.includes(project) && (
               <div className="mt-2 space-y-2">
                 {tasks.map((task) => (
-                  <TaskCard key={task.id} task={task} />
+                  <TaskCard key={task.id} task={task} onDelete={onDeleteTask} />
                 ))}
               </div>
             )}
