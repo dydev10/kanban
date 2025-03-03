@@ -1,5 +1,6 @@
 import { FC, PointerEvent } from "react";
 import { useDraggable } from "@dnd-kit/core";
+import { FaTrashAlt } from "react-icons/fa";
 
 interface Task {
   id: string;
@@ -27,14 +28,14 @@ const TaskCard: FC<TaskCardProps> = ({ task, onDelete }) => {
       {...listeners}
       {...attributes}
       style={{ transform: transform ? `translate(${transform.x}px, ${transform.y}px)` : undefined }}
-      className="bg-blue-50 text-emerald-900 flex justify-between items-center p-3 rounded-md shadow-md cursor-pointer"
+      className="bg-blue-50 font-medium text-gray-700 flex justify-between items-center p-3 rounded-md shadow-md cursor-pointer"
     >
       <span>{task.title}</span>
       <button
         onPointerDown={handleDeleteTask}
-        className="px-1 rounded-md text-red-500 hover:text-red-500 hover:bg-gray-300 cursor-pointer"
+        className="px-1 rounded-md text-gray-500 hover:text-red-500 cursor-pointer"
       >
-        X
+        <FaTrashAlt />
       </button>
     </div>
   );
