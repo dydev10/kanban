@@ -3,7 +3,7 @@ import { DndContext, closestCorners, DragEndEvent } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import Column from "./Column";
 import LoginForm from "./LoginForm";
-import { Board, LoginCredentials, Task, TaskColumns } from "./types";
+import { Board, LoginCredentials, Project, Task, TaskColumns } from "./types";
 import pb, { checkSession, loginUser } from "./api/pb";
 import AddTaskForm from "./AddTaskForm";
 
@@ -13,6 +13,7 @@ export default function KanbanBoard() {
   const [isGuest, setIsGuest] = useState<boolean>(false);
   const [selectedBoard, setSelectedBoard] = useState<string | null>(null);
   const [boards, setBoards] = useState<Board[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
   const columns: string[] = Object.values(TaskColumns);
 
   const fetchBoards = useCallback(async () => {
@@ -23,6 +24,12 @@ export default function KanbanBoard() {
       fetchTasks(records[0].id);
     }
   }, []); 
+
+  async function fetchProjects() {
+    const records = await pb.collection("projects").getFullList<Project>();
+    setProjects(records);
+  };
+  
 
   async function fetchTasks(boardId: string) {
     const records = await pb.collection("tasks").getFullList<Task>({
@@ -87,6 +94,7 @@ export default function KanbanBoard() {
   useEffect(() => {
     if (isAuthed) {
       fetchBoards();
+      fetchProjects();
     }
   }, [isAuthed, fetchBoards]);
 
@@ -112,7 +120,7 @@ export default function KanbanBoard() {
           </select>
         </div>
         <button onClick={createRandomTask} className="px-3 py-1 bg-blue-500 text-white rounded">+ Task Random</button>
-        <AddTaskForm onAdd={addTask} />
+        <AddTaskForm onAdd={addTask} projects={projects} />
       </div>
 
       <DndContext collisionDetection={closestCorners} onDragEnd={handleDragEnd}>
@@ -120,8 +128,8 @@ export default function KanbanBoard() {
           {columns.map((column) => {
             const tasksByProject = tasks
               .filter((task) => task.column === column)
-              .reduce((acc, task) => {
-                const project = task.project || "No Project";
+              .reduce((acc, task) => {                
+                const project = projects.find(p => p.id === task.project)?.title || "No Project";
                 if (!acc[project]) acc[project] = [];
                 acc[project].push(task);
                 return acc;

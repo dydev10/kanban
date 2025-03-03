@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef, FormEvent } from "react";
-import { TaskColumns } from "./types";
+import { Project, TaskColumns } from "./types";
 
 type AddTaskPopupProps = {
   onAdd: (taskTitle: string, status: string, project?: string) => Promise<void>;
+  projects: Project[],
 };
 
-export default function AddTaskPopup({ onAdd }: AddTaskPopupProps) {
+export default function AddTaskPopup({ onAdd, projects }: AddTaskPopupProps) {
   const defaultStatus = Object.values(TaskColumns)[0];
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [taskTitle, setTaskTitle] = useState<string>("");
@@ -96,13 +97,18 @@ export default function AddTaskPopup({ onAdd }: AddTaskPopupProps) {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-900 dark:text-gray-300">Project (Optional)</label>
-              <input 
-                type="text" 
-                placeholder="Enter project name" 
+              <select 
                 className="w-full px-3 py-2 border rounded-md bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white border-gray-300 dark:border-gray-700"
                 value={project}
                 onChange={(e) => setProject(e.target.value)}
-              />
+              >
+                <option value="">None</option>
+                {
+                  projects.map((p) => {
+                    return <option value={p.id}>{p.title}</option>
+                  })
+                }
+              </select>
             </div>
             <button 
               type="submit" 

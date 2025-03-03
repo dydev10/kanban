@@ -8,6 +8,11 @@ export interface Board {
   name: string;
 }
 
+export interface Project {
+  id: string;
+  title: string;
+}
+
 export interface Task {
   id: string;
   title: string;
