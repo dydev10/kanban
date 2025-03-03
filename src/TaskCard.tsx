@@ -28,9 +28,9 @@ const TaskCard: FC<TaskCardProps> = ({ task, onDelete }) => {
       {...listeners}
       {...attributes}
       style={{ transform: transform ? `translate(${transform.x}px, ${transform.y}px)` : undefined }}
-      className="bg-blue-50 hover:bg-blue-100 active:bg-blue-300 font-medium text-gray-700 flex justify-between items-center p-4 rounded-md shadow-md cursor-pointer"
+      className="bg-blue-50 hover:bg-blue-100 active:bg-blue-300 font-medium text-gray-700 flex justify-between items-center gap-2 p-4 rounded-md shadow-md cursor-pointer"
     >
-      <span>{task.title}</span>
+      <span className="text-left">{task.title}</span>
       <button
         onPointerDown={handleDeleteTask}
         className="px-1 rounded-md text-gray-500 hover:text-red-500 cursor-pointer"
