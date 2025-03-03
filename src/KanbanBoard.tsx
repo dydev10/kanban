@@ -5,6 +5,7 @@ import Column from "./Column";
 import LoginForm from "./LoginForm";
 import { Board, LoginCredentials, Task, TaskColumns } from "./types";
 import pb, { checkSession, loginUser } from "./api/pb";
+import AddTaskForm from "./AddTaskForm";
 
 export default function KanbanBoard() {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -62,11 +63,22 @@ export default function KanbanBoard() {
     fetchTasks(newBoard);
   }
 
-  async function createTask() {
+  async function createRandomTask() {
     if (!selectedBoard) return;
     await pb.collection("tasks").create({
       title: "New Random Task #" + Math.floor(Math.random() * 1000),
       column: "todo",
+      board: selectedBoard
+    });
+    fetchTasks(selectedBoard);
+  }
+
+  async function addTask(title: string, column: string, project?: string) {
+    if (!selectedBoard) return;
+    await pb.collection("tasks").create({
+      title,
+      column,
+      project,
       board: selectedBoard
     });
     fetchTasks(selectedBoard);
@@ -99,7 +111,8 @@ export default function KanbanBoard() {
             ))}
           </select>
         </div>
-        <button onClick={createTask} className="px-3 py-1 bg-blue-500 text-white rounded">+ Add Task</button>
+        <button onClick={createRandomTask} className="px-3 py-1 bg-blue-500 text-white rounded">+ Task Random</button>
+        <AddTaskForm onAdd={addTask} />
       </div>
 
       <DndContext collisionDetection={closestCorners} onDragEnd={handleDragEnd}>

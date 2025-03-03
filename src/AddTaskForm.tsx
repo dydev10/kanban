@@ -1,10 +1,17 @@
 import { useState, useEffect, useRef, FormEvent } from "react";
 import { TaskColumns } from "./types";
 
-export default function AddTaskPopup() {
+type AddTaskPopupProps = {
+  onAdd: (taskTitle: string, status: string, project?: string) => Promise<void>;
+};
+
+export default function AddTaskPopup({ onAdd }: AddTaskPopupProps) {
+  const defaultStatus = Object.values(TaskColumns)[0];
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [taskTitle, setTaskTitle] = useState<string>("");
-  const [status, setStatus] = useState<string>("To Do");
+  const [status, setStatus] = useState<string>(defaultStatus);
+  const [project, setProject] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
   const popupRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
@@ -31,10 +38,19 @@ export default function AddTaskPopup() {
     };
   }, [isOpen]);
 
-  const handleAddTask = (e: FormEvent<HTMLFormElement>) => {
+  const reset = () => {
+    setLoading(false);
+    setIsOpen(false);
+    setTaskTitle("");
+    setStatus(defaultStatus);
+    setProject("");
+  };
+
+  const handleAddTask = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log("Task Title:", taskTitle);
-    console.log("Status:", status);
+    setLoading(true);
+    await onAdd(taskTitle, status, project || undefined);
+    reset();
   };
 
   return (
@@ -78,11 +94,22 @@ export default function AddTaskPopup() {
                 }
               </select>
             </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-900 dark:text-gray-300">Project (Optional)</label>
+              <input 
+                type="text" 
+                placeholder="Enter project name" 
+                className="w-full px-3 py-2 border rounded-md bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white border-gray-300 dark:border-gray-700"
+                value={project}
+                onChange={(e) => setProject(e.target.value)}
+              />
+            </div>
             <button 
               type="submit" 
               className="w-full text-sm py-2 bg-green-600 dark:bg-green-500 text-white rounded-md"
+              disabled={loading}
             >
-              Add Task
+              {loading ? "Adding..." : "Add Task"}
             </button>
           </form>
         </div>
