@@ -138,9 +138,9 @@ export default function KanbanBoard() {
   }
 
   return (
-    <div>
+    <div className="flex flex-col h-full">
       <HeaderBar />
-      <div className="p-4">
+      <div className="p-4 grow flex flex-col">
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <label>Select Board:</label>
@@ -155,7 +155,7 @@ export default function KanbanBoard() {
         </div>
 
         <DndContext collisionDetection={closestCorners} onDragEnd={handleDragEnd} onDragOver={handleDragOver}>
-          <div className="flex gap-4 p-4 overflow-x-auto min-h-screen bg-gray-100">
+          <div className="flex grow gap-4 p-4 overflow-x-auto bg-gray-100">
             {columns.map((column) => {
               const tasksByProject = tasks
                 .filter((task) => task.column === column)
