@@ -134,7 +134,7 @@ export default function KanbanBoard() {
             <label className="font-light">Select Board:</label>
             <select onChange={switchBoard} value={selectedBoard || ""} className="font-bold font-mono text-lg">
               {boards.map((board) => (
-                <option key={board.id} value={board.id}>{board.name}</option>
+                <option className="text-gray-500" key={board.id} value={board.id}>{board.name}</option>
               ))}
             </select>
           </div>
