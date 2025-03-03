@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { ChangeEvent, useCallback, useEffect, useState } from "react";
 import { DndContext, closestCorners, DragEndEvent } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import Column from "./Column";
@@ -56,6 +56,22 @@ export default function KanbanBoard() {
     });
   };
 
+  async function switchBoard(e: ChangeEvent<HTMLSelectElement>) {
+    const newBoard = e.target.value;
+    setSelectedBoard(newBoard)
+    fetchTasks(newBoard);
+  }
+
+  async function createTask() {
+    if (!selectedBoard) return;
+    await pb.collection("tasks").create({
+      title: "New Random Task #" + Math.floor(Math.random() * 1000),
+      column: "todo",
+      board: selectedBoard
+    });
+    fetchTasks(selectedBoard);
+  }
+
   useEffect(() => {
     if (isAuthed) {
       fetchBoards();
@@ -74,13 +90,14 @@ export default function KanbanBoard() {
 
   return (
     <div className="p-4">
-      <div className="mb-4">
-        <label className="mr-2">Select Board:</label>
-        <select onChange={(e) => setSelectedBoard(e.target.value)} value={selectedBoard || ""}>
+      <div className="mb-4 flex items-center gap-2">
+        <label>Select Board:</label>
+        <select onChange={switchBoard} value={selectedBoard || ""}>
           {boards.map((board) => (
             <option key={board.id} value={board.id}>{board.name}</option>
           ))}
         </select>
+        <button onClick={createTask} className="px-3 py-1 bg-blue-500 text-white rounded">+ Add Task</button>
       </div>
 
       <DndContext collisionDetection={closestCorners} onDragEnd={handleDragEnd}>
