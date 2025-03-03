@@ -4,7 +4,7 @@
 
 A basic kanban board app to track personal projects. Uses self hosted PocketBase service as backend.
 
-![alt screenshot](./screen.png)
+![Screenshot](./screen.png)
 
 ## Local setup
 
