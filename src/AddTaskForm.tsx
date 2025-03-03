@@ -90,7 +90,7 @@ export default function AddTaskPopup({ onAdd, projects }: AddTaskPopupProps) {
               >
                 {
                   Object.values(TaskColumns).map((status) => {
-                    return <option value={status}>{status}</option>
+                    return <option key={status} value={status}>{status}</option>
                   })
                 }
               </select>
@@ -105,7 +105,7 @@ export default function AddTaskPopup({ onAdd, projects }: AddTaskPopupProps) {
                 <option value="">None</option>
                 {
                   projects.map((p) => {
-                    return <option value={p.id}>{p.title}</option>
+                    return <option key={p.id} value={p.id}>{p.title}</option>
                   })
                 }
               </select>
