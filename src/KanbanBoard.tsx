@@ -85,7 +85,7 @@ export default function KanbanBoard() {
         queryClient.setQueryData(["tasks", selectedBoard], context.previousTasks);
       }
     },
-    onSuccess: () => {
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks", selectedBoard] });
     },
   });
@@ -123,6 +123,29 @@ export default function KanbanBoard() {
       };
       queryClient.setQueryData(["tasks", selectedBoard], [...previousTasks, newTask]);
 
+      return { previousTasks };
+    },
+    onError: (_, __, context) => {
+      queryClient.setQueryData(["tasks", selectedBoard], context?.previousTasks);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["tasks", selectedBoard] });
+    }
+  });
+
+  const deleteTaskMutation = useMutation({
+    mutationFn: async (taskId: string) => {
+      return pb.collection("tasks").delete(taskId);
+    },
+    onMutate: async (taskId: string) => {
+      await queryClient.cancelQueries({ queryKey: ["tasks", selectedBoard] });
+  
+      const previousTasks = queryClient.getQueryData<Task[]>(["tasks", selectedBoard]) || [];
+      queryClient.setQueryData(
+        ["tasks", selectedBoard],
+        previousTasks.filter((task) => task.id !== taskId)
+      );
+  
       return { previousTasks };
     },
     onError: (_, __, context) => {
@@ -184,7 +207,7 @@ export default function KanbanBoard() {
   }
 
   async function deleteTask(taskId: string) {
-    return pb.collection("tasks").delete(taskId);
+    deleteTaskMutation.mutate(taskId);
   }
 
   function handleDeleteTask(taskId: string) {
