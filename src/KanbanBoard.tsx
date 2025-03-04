@@ -20,16 +20,17 @@ export default function KanbanBoard() {
   const [selectedBoard, setSelectedBoard] = useState<string | null>(null);
   const [hoveredColumn, setHoveredColumn] = useState<string | null>(null);
 
-  const fetchColumns = useCallback(async () => {
+  const fetchColumns = useCallback(async (boardId: string | null) => {
+    if (!boardId) return [];
     const records = await pb.collection("columns").getFullList<BoardColumn>({
-      filter: `board = "${selectedBoard}" || board = ""`
+      filter: `board = "${boardId}" || board = ""`
     });    
     return records;
-  }, [pb, selectedBoard]);
+  }, [pb]);
 
-  const {data: columns  } = useQuery({
+  const { data: columns  } = useQuery({
     queryKey: ['columns', selectedBoard],
-    queryFn: fetchColumns,
+    queryFn: () => fetchColumns(selectedBoard),
   });  
 
   const fetchTasks = useCallback(async (boardId: string) => {
