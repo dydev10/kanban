@@ -7,10 +7,11 @@ import { Board, BoardColumn, LoginCredentials, Project, Task } from "./types";
 import AddTaskForm from "./AddTaskForm";
 import HeaderBar from "./HeaderBar";
 import usePocket from "./hooks/usePocket";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export default function KanbanBoard() {
   const { pb, login, token, user } = usePocket();
+  const queryClient = useQueryClient();
 
   const [isGuest, setIsGuest] = useState<boolean>(false);
   const [selectedBoard, setSelectedBoard] = useState<string | null>(null);
@@ -62,6 +63,33 @@ export default function KanbanBoard() {
     enabled: !!selectedBoard,
   });
 
+  /**
+   * Async Optimistic Mutations
+   */
+  const updateTaskMutation = useMutation({
+    mutationFn: async ({ id, updates }: { id: string; updates: Partial<Task> }) => {
+      return pb.collection("tasks").update(id, updates, { requestKey: null }); // requestKey null to disable auto cancellation
+    },
+    onMutate: async ({ id, updates }) => {
+      await queryClient.cancelQueries({ queryKey: ["tasks", selectedBoard] });
+
+      const previousTasks = queryClient.getQueryData<Task[]>(["tasks", selectedBoard]) || [];
+      const updatedTasks = previousTasks.map((task) => (task.id === id ? { ...task, ...updates } : task));
+
+      queryClient.setQueryData(["tasks", selectedBoard], updatedTasks);
+
+      return { previousTasks };
+    },
+    onError: (_, __, context) => {
+      if (context?.previousTasks) {
+        queryClient.setQueryData(["tasks", selectedBoard], context.previousTasks);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tasks", selectedBoard] });
+    },
+  });
+
   // set default selection
   useEffect(() => {
     if(boards?.length) {
@@ -84,7 +112,7 @@ export default function KanbanBoard() {
 
     const taskId = active.id as string;
     const newColumn = over.id as string;
-    updateTask(taskId, { column: newColumn });
+    updateTaskMutation.mutate({ id: taskId, updates: { column: newColumn } });
   }
 
   function handleLoginCancel() {
@@ -113,11 +141,6 @@ export default function KanbanBoard() {
       user: user.id,
       board: selectedBoard
     });
-    refetchTasks();
-  }
-
-  async function updateTask(id: string, updates: Partial<Task>) {
-    await pb.collection("tasks").update(id, updates);
     refetchTasks();
   }
 
