@@ -3,14 +3,14 @@ import { DndContext, closestCorners, DragEndEvent, DragOverEvent } from "@dnd-ki
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import Column from "./Column";
 import LoginForm from "./LoginForm";
-import { Board, BoardColumn, LoginCredentials, Project, Task } from "./types";
+import { Board, BoardColumn, LoginCredentials, PayloadTaskUpdate, Project, Task } from "./types";
 import AddTaskForm from "./AddTaskForm";
 import HeaderBar from "./HeaderBar";
 import usePocket from "./hooks/usePocket";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export default function KanbanBoard() {
-  const { pb, login, token, user } = usePocket();
+  const { pb, login, token } = usePocket();
   const queryClient = useQueryClient();
 
   const [isGuest, setIsGuest] = useState<boolean>(false);
@@ -90,6 +90,49 @@ export default function KanbanBoard() {
     },
   });
 
+  const createTaskMutation = useMutation({
+    mutationFn: async ({ title, column, project }: { title: string, column: string, project?: string }) => {
+      const userId = pb.authStore.record?.id;
+      if (!userId) throw new Error("User not authenticated");
+      if (!selectedBoard) throw new Error(" No board selected");
+
+      const tempTask: Partial<Task> = {
+        title,
+        project,
+        column,
+        board: selectedBoard,
+        user: userId,
+      }
+      return pb.collection("tasks").create(tempTask);
+    },
+    onMutate: async () => {
+      const userId = pb.authStore.record?.id;
+      if (!userId) throw new Error("User not authenticated");
+      if (!selectedBoard) throw new Error(" No board selected");
+
+      await queryClient.cancelQueries({ queryKey: ["tasks", selectedBoard] });
+
+      const previousTasks = queryClient.getQueryData<Task[]>(["tasks", selectedBoard]) || [];
+      const newTask: Task = {
+        id: Math.random().toString(), // Temporary ID
+        title: "New Task",
+        column: "todo",
+        board: selectedBoard!,
+        project: "",
+        user: userId,
+      };
+      queryClient.setQueryData(["tasks", selectedBoard], [...previousTasks, newTask]);
+
+      return { previousTasks };
+    },
+    onError: (_, __, context) => {
+      queryClient.setQueryData(["tasks", selectedBoard], context?.previousTasks);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["tasks", selectedBoard] });
+    }
+  });
+
   // set default selection
   useEffect(() => {
     if(boards?.length) {
@@ -112,7 +155,7 @@ export default function KanbanBoard() {
 
     const taskId = active.id as string;
     const newColumn = over.id as string;
-    updateTaskMutation.mutate({ id: taskId, updates: { column: newColumn } });
+    updateTask({ id: taskId, updates: { column: newColumn } });
   }
 
   function handleLoginCancel() {
@@ -133,15 +176,11 @@ export default function KanbanBoard() {
   }
 
   async function addTask(title: string, column: string, project?: string) {
-    if (!selectedBoard || !user) return;
-    await pb.collection("tasks").create({
-      title,
-      column,
-      project,
-      user: user.id,
-      board: selectedBoard
-    });
-    refetchTasks();
+    createTaskMutation.mutate({ title, column, project });
+  }
+
+  async function updateTask(payload: PayloadTaskUpdate) {
+    updateTaskMutation.mutate(payload);
   }
 
   async function deleteTask(taskId: string) {

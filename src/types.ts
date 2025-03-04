@@ -30,6 +30,7 @@ export interface Task {
   title: string;
   column: string;
   board: string;
+  user: string;
   project?: string;
 }
 
@@ -38,3 +39,11 @@ export enum TaskColumns {
   IN_PROGRESS = "in_progress",
   DONE = "done",
 };
+
+/**
+ * DB operation payload types
+ */
+export type PayloadTaskUpdate = {
+  id: string,
+  updates: Partial<Task>, 
+}
