@@ -10,55 +10,64 @@ import usePocket from "./hooks/usePocket";
 import { useQuery } from "@tanstack/react-query";
 
 export default function KanbanBoard() {
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [boards, setBoards] = useState<Board[]>([]);
-  const [projects, setProjects] = useState<Project[]>([]);
-  
   const { pb, login, token, user } = usePocket();
 
   const [isGuest, setIsGuest] = useState<boolean>(false);
   const [selectedBoard, setSelectedBoard] = useState<string | null>(null);
   const [hoveredColumn, setHoveredColumn] = useState<string | null>(null);
 
-  const fetchColumns = useCallback(async (boardId: string | null) => {
-    if (!boardId) return [];
-    const records = await pb.collection("columns").getFullList<BoardColumn>({
-      filter: `board = "${boardId}" || board = ""`
-    });    
-    return records;
+  const fetchBoards = useCallback(async () => {
+    return await pb.collection("boards").getFullList<Board>();
+  }, [pb]); 
+
+  const fetchProjects = useCallback(async () => {
+    return await pb.collection("projects").getFullList<Project>();
   }, [pb]);
 
+  const fetchColumns = useCallback(async (boardId: string | null) => {
+    if (!boardId) return [];    
+    return await pb.collection("columns").getFullList<BoardColumn>({
+      filter: `board = "${boardId}" || board = ""`,
+    });;
+  }, [pb]);
+ 
+  const fetchTasks = useCallback(async (boardId: string | null) => {
+    if (!boardId) return [];
+    return await pb.collection("tasks").getFullList<Task>({
+      filter: `board = "${boardId}"`,
+    });
+  }, [pb]);
+
+  /**
+   * Async Data Queries
+   */
+  const { data: boards  } = useQuery({
+    queryKey: ['boards'],
+    queryFn: () => fetchBoards(),
+    enabled: !!token
+  }); 
+  const { data: projects  } = useQuery({
+    queryKey: ['projects'],
+    queryFn: () => fetchProjects(),
+    enabled: !!token,
+  });
   const { data: columns  } = useQuery({
     queryKey: ['columns', selectedBoard],
     queryFn: () => fetchColumns(selectedBoard),
-  });  
+    enabled: !!selectedBoard,
+  });
+  const { data: tasks, refetch: refetchTasks  } = useQuery({
+    queryKey: ['tasks', selectedBoard],
+    queryFn: () => fetchTasks(selectedBoard),
+    enabled: !!selectedBoard,
+  });
 
-  const fetchTasks = useCallback(async (boardId: string) => {
-    const records = await pb.collection("tasks").getFullList<Task>({
-      filter: `board = "${boardId}"`
-    });
-    setTasks(records);
-  }, [pb]);
-
-  const fetchBoards = useCallback(async () => {
-    const records = await pb.collection("boards").getFullList<Board>();
-    setBoards(records);
-    if (records.length > 0) {
-      setSelectedBoard(records[0].id);
-      fetchTasks(records[0].id);
+  // set default selection
+  useEffect(() => {
+    if(boards?.length) {
+      setSelectedBoard(boards[0].id);
     }
-  }, [pb, fetchTasks]); 
-
-  const fetchProjects = useCallback(async () => {
-    const records = await pb.collection("projects").getFullList<Project>();
-    setProjects(records);
-  }, [pb]);
-
-
-  async function updateTask(id: string, updates: Partial<Task>) {
-    await pb.collection("tasks").update(id, updates);
-    if (selectedBoard) fetchTasks(selectedBoard);
-  }
+  }, [boards]);
 
   function handleDragOver(event: DragOverEvent) {
     const { over } = event;
@@ -93,7 +102,6 @@ export default function KanbanBoard() {
   async function switchBoard(e: ChangeEvent<HTMLSelectElement>) {
     const newBoard = e.target.value;
     setSelectedBoard(newBoard)
-    fetchTasks(newBoard);
   }
 
   async function addTask(title: string, column: string, project?: string) {
@@ -105,7 +113,12 @@ export default function KanbanBoard() {
       user: user.id,
       board: selectedBoard
     });
-    fetchTasks(selectedBoard);
+    refetchTasks();
+  }
+
+  async function updateTask(id: string, updates: Partial<Task>) {
+    await pb.collection("tasks").update(id, updates);
+    refetchTasks();
   }
 
   async function deleteTask(taskId: string) {
@@ -116,17 +129,9 @@ export default function KanbanBoard() {
     deleteTask(taskId).then(() => {
       console.log('Deleted Task!');
       
-      if (!selectedBoard) return;
-      fetchTasks(selectedBoard);
+      refetchTasks();
     });
   }
-
-  useEffect(() => {
-    if (token) {
-      fetchBoards();
-      fetchProjects();
-    }
-  }, [token, fetchBoards, fetchProjects]);
 
   if (!token && !isGuest) {
     return (
@@ -146,25 +151,25 @@ export default function KanbanBoard() {
           <div className="flex items-center gap-2">
             <label className="font-light">Select Board:</label>
             <select onChange={switchBoard} value={selectedBoard || ""} className="font-bold font-mono text-lg">
-              {boards.map((board) => (
+              {boards?.map((board) => (
                 <option className="text-gray-500" key={board.id} value={board.id}>{board.name}</option>
               ))}
             </select>
           </div>
-          <AddTaskForm onAdd={addTask} projects={projects} columns={columns} />
+          <AddTaskForm onAdd={addTask} projects={projects ?? []} columns={columns} />
         </div>
 
         <DndContext collisionDetection={closestCorners} onDragEnd={handleDragEnd} onDragOver={handleDragOver}>
           <div className="flex grow gap-4 p-4 overflow-x-auto bg-gray-100">
             {columns?.map(({id, title}) => {
               const tasksByProject = tasks
-                .filter((task) => task.column === id)
+                ?.filter((task) => task.column === id)
                 .reduce((acc, task) => {                
-                  const project = projects.find(p => p.id === task.project)?.title || "No Project";
+                  const project = projects?.find(p => p.id === task.project)?.title || "No Project";
                   if (!acc[project]) acc[project] = [];
                   acc[project].push(task);
                   return acc;
-                }, {} as Record<string, Task[]>);
+                }, {} as Record<string, Task[]>) ?? {};
 
               return (
                 <SortableContext id={id} key={id} items={Object.values(tasksByProject).flat()} strategy={verticalListSortingStrategy}>
