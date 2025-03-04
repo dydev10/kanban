@@ -3,14 +3,14 @@ import { DndContext, closestCorners, DragEndEvent, DragOverEvent } from "@dnd-ki
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import Column from "./Column";
 import LoginForm from "./LoginForm";
-import { Board, BoardColumn, LoginCredentials, PayloadTaskUpdate, Project, Task } from "./types";
+import { Board, BoardColumn, PayloadTaskUpdate, Project, Task } from "./types";
 import AddTaskForm from "./AddTaskForm";
 import HeaderBar from "./HeaderBar";
 import usePocket from "./hooks/usePocket";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export default function KanbanBoard() {
-  const { pb, login, token } = usePocket();
+  const { pb, token } = usePocket();
   const queryClient = useQueryClient();
 
   const [isGuest, setIsGuest] = useState<boolean>(false);
@@ -182,15 +182,8 @@ export default function KanbanBoard() {
   }
 
   function handleLoginCancel() {
-    console.log('Closed Cancelled!');
+    console.log('Cancelled Login!');
     setIsGuest(true);
-  };
-
-  function handleLoginRequest(creds: LoginCredentials) {
-    console.log('Trying to login...');
-    login(creds.email, creds.password).then((user) => {
-      console.log('Logged In user:', user);
-    });
   };
 
   async function switchBoard(e: ChangeEvent<HTMLSelectElement>) {
@@ -222,8 +215,7 @@ export default function KanbanBoard() {
     return (
       <LoginForm
         isOpen
-        onClose={handleLoginCancel}
-        onComplete={handleLoginRequest}
+        onCancel={handleLoginCancel}
       />
     );
   }

@@ -1,12 +1,14 @@
 import { FC, FormEvent, useState } from "react";
+import usePocket from "./hooks/usePocket";
 
 interface ModalProps {
   isOpen: boolean,
-  onClose: () => void,
-  onComplete: ({ email, password }: { email: string, password: string }) => void,
+  onCancel: () => void,
 }
 
-const LoginForm: FC<ModalProps> = ({ isOpen, onClose, onComplete }) => {
+const LoginForm: FC<ModalProps> = ({ isOpen, onCancel }) => {
+  const { login } = usePocket();
+
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   
@@ -14,14 +16,13 @@ const LoginForm: FC<ModalProps> = ({ isOpen, onClose, onComplete }) => {
     return;
   }
 
-  const handleComplete = (e: FormEvent<HTMLFormElement>) => {
+  const handleComplete = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // console.log("Email:", email);
-    // console.log("Password:", password);
-    onComplete({
-      email,
-      password,
-    })
+    console.log('Trying to login...');
+
+    login(email, password).then((user) => {
+      console.log('Logged In user:', user);
+    });
   };
 
   return (
@@ -33,7 +34,7 @@ const LoginForm: FC<ModalProps> = ({ isOpen, onClose, onComplete }) => {
         <div className="w-1/2 p-8 flex flex-col items-center">
           <div className="w-full flex flex-col items-center mb-6">
             <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">Login</h2>
-            <button onClick={onClose} className="absolute top-4 right-4 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">✖</button>
+            <button onClick={onCancel} className="absolute top-4 right-4 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">✖</button>
           </div>
           <form className="space-y-5 w-full" onSubmit={handleComplete}>
             <div>
