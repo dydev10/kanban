@@ -19,6 +19,12 @@ export interface Project {
   title: string;
 }
 
+export interface BoardColumn {
+  id: string;
+  title: string;
+  board: string;
+}
+
 export interface Task {
   id: string;
   title: string;

@@ -3,10 +3,11 @@ import { DndContext, closestCorners, DragEndEvent, DragOverEvent } from "@dnd-ki
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import Column from "./Column";
 import LoginForm from "./LoginForm";
-import { Board, LoginCredentials, Project, Task, TaskColumns } from "./types";
+import { Board, BoardColumn, LoginCredentials, Project, Task } from "./types";
 import AddTaskForm from "./AddTaskForm";
 import HeaderBar from "./HeaderBar";
 import usePocket from "./hooks/usePocket";
+import { useQuery } from "@tanstack/react-query";
 
 export default function KanbanBoard() {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -17,8 +18,19 @@ export default function KanbanBoard() {
 
   const [isGuest, setIsGuest] = useState<boolean>(false);
   const [selectedBoard, setSelectedBoard] = useState<string | null>(null);
-  const columns: string[] = Object.values(TaskColumns);
   const [hoveredColumn, setHoveredColumn] = useState<string | null>(null);
+
+  const fetchColumns = useCallback(async () => {
+    const records = await pb.collection("columns").getFullList<BoardColumn>({
+      filter: `board = "${selectedBoard}" || board = ""`
+    });    
+    return records;
+  }, [pb, selectedBoard]);
+
+  const {data: columns  } = useQuery({
+    queryKey: ['columns', selectedBoard],
+    queryFn: fetchColumns,
+  });  
 
   const fetchTasks = useCallback(async (boardId: string) => {
     const records = await pb.collection("tasks").getFullList<Task>({
@@ -138,14 +150,14 @@ export default function KanbanBoard() {
               ))}
             </select>
           </div>
-          <AddTaskForm onAdd={addTask} projects={projects} />
+          <AddTaskForm onAdd={addTask} projects={projects} columns={columns} />
         </div>
 
         <DndContext collisionDetection={closestCorners} onDragEnd={handleDragEnd} onDragOver={handleDragOver}>
           <div className="flex grow gap-4 p-4 overflow-x-auto bg-gray-100">
-            {columns.map((column) => {
+            {columns?.map(({id, title}) => {
               const tasksByProject = tasks
-                .filter((task) => task.column === column)
+                .filter((task) => task.column === id)
                 .reduce((acc, task) => {                
                   const project = projects.find(p => p.id === task.project)?.title || "No Project";
                   if (!acc[project]) acc[project] = [];
@@ -154,11 +166,12 @@ export default function KanbanBoard() {
                 }, {} as Record<string, Task[]>);
 
               return (
-                <SortableContext id={column} key={column} items={Object.values(tasksByProject).flat()} strategy={verticalListSortingStrategy}>
+                <SortableContext id={id} key={id} items={Object.values(tasksByProject).flat()} strategy={verticalListSortingStrategy}>
                   <Column
-                    title={column}
+                    id={id}
+                    title={title}
                     tasksByProject={tasksByProject}
-                    isHovered={hoveredColumn === column}
+                    isHovered={hoveredColumn === id}
                     onDeleteTask={handleDeleteTask}  
                   />
                 </SortableContext>

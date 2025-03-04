@@ -10,14 +10,15 @@ interface Task {
 }
 
 interface ColumnProps {
+  id: string,
   title: string;
   tasksByProject: Record<string, Task[]>;
   isHovered: boolean;
   onDeleteTask: (taskId: string) => void;
 }
 
-const Column: FC<ColumnProps> = ({ title, tasksByProject, isHovered, onDeleteTask }) => {
-  const { setNodeRef } = useDroppable({ id: title });
+const Column: FC<ColumnProps> = ({ id, title, tasksByProject, isHovered, onDeleteTask }) => {
+  const { setNodeRef } = useDroppable({ id });
   // const [openProject, setOpenProject] = useState<string | null>(null);
   const [collapsedProjects, setCollapsedProjects] = useState<string[]>([]);
 

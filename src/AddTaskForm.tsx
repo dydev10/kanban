@@ -1,20 +1,26 @@
-import { useState, useEffect, useRef, FormEvent } from "react";
-import { Project, TaskColumns } from "./types";
+import { useState, useEffect, useRef, FormEvent, useCallback } from "react";
+import { BoardColumn, Project } from "./types";
 
 type AddTaskPopupProps = {
   onAdd: (taskTitle: string, status: string, project?: string) => Promise<void>;
   projects: Project[],
+  columns: BoardColumn[] | undefined,
 };
 
-export default function AddTaskPopup({ onAdd, projects }: AddTaskPopupProps) {
-  const defaultStatus = Object.values(TaskColumns)[0];
+export default function AddTaskPopup({ onAdd, projects, columns }: AddTaskPopupProps) {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [taskTitle, setTaskTitle] = useState<string>("");
-  const [status, setStatus] = useState<string>(defaultStatus);
+  const [col, setCol] = useState<string>("");
   const [project, setProject] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const popupRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
+
+  const getDefaultCol = useCallback(() => columns?.[0]?.id ?? "", [columns]);
+
+  useEffect(() => {
+    setCol(getDefaultCol());
+  }, [getDefaultCol]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -43,14 +49,14 @@ export default function AddTaskPopup({ onAdd, projects }: AddTaskPopupProps) {
     setLoading(false);
     setIsOpen(false);
     setTaskTitle("");
-    setStatus(defaultStatus);
+    setCol(getDefaultCol());
     setProject("");
   };
 
   const handleAddTask = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
-    await onAdd(taskTitle, status, project || undefined);
+    await onAdd(taskTitle, col, project || undefined);
     reset();
   };
 
@@ -85,12 +91,12 @@ export default function AddTaskPopup({ onAdd, projects }: AddTaskPopupProps) {
               <label className="block text-sm font-medium text-gray-900 dark:text-gray-300">Status</label>
               <select 
                 className="w-full px-3 py-2 border rounded-md bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white border-gray-300 dark:border-gray-700"
-                value={status}
-                onChange={(e) => setStatus(e.target.value)}
+                value={col}
+                onChange={(e) => setCol(e.target.value)}
               >
                 {
-                  Object.values(TaskColumns).map((status) => {
-                    return <option key={status} value={status}>{status}</option>
+                  columns?.map(({ id, title }) => {
+                    return <option key={id} value={id}>{title}</option>
                   })
                 }
               </select>
