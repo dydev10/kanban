@@ -105,7 +105,7 @@ export default function KanbanBoard() {
       }
       return pb.collection("tasks").create(tempTask);
     },
-    onMutate: async () => {
+    onMutate: async ({ title, column, project }: { title: string, column: string, project?: string }) => {
       const userId = pb.authStore.record?.id;
       if (!userId) throw new Error("User not authenticated");
       if (!selectedBoard) throw new Error(" No board selected");
@@ -115,10 +115,10 @@ export default function KanbanBoard() {
       const previousTasks = queryClient.getQueryData<Task[]>(["tasks", selectedBoard]) || [];
       const newTask: Task = {
         id: Math.random().toString(), // Temporary ID
-        title: "New Task",
-        column: "todo",
-        board: selectedBoard!,
-        project: "",
+        title,
+        column,
+        project,
+        board: selectedBoard,
         user: userId,
       };
       queryClient.setQueryData(["tasks", selectedBoard], [...previousTasks, newTask]);
