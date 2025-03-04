@@ -37,6 +37,7 @@ export const PocketProvider: FC<PropsWithChildren> = ({ children }) => {
   }, [pb]);
 
   const login = useCallback(async (email: string, password: string) => {
+    setAuthError(null);
     try {
       await pb.collection<User>("users").authWithPassword(email, password);
     } catch (error) {
