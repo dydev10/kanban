@@ -1,13 +1,13 @@
-import { RecordAuthResponse, RecordModel } from "pocketbase";
+import { AuthRecord, RecordAuthResponse } from "pocketbase";
 import { createContext } from "react";
 import PocketBase from 'pocketbase';
+import { User } from "../types";
 
 export interface PocketStore {
-  register: (email: string, password: string) => Promise<RecordModel>,
-  login: (email: string, password: string) => Promise<RecordAuthResponse<RecordModel>>,
+  register: (email: string, password: string) => Promise<User>,
+  login: (email: string, password: string) => Promise<RecordAuthResponse<User>>,
   logout: () => void,
-  user: RecordModel | null,
-  token: string | null,
+  user: AuthRecord | null,
   pb: PocketBase,
 }
 

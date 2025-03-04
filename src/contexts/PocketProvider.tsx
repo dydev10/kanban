@@ -6,11 +6,12 @@ import {
   FC,
   useCallback,
 } from "react";
-import PocketBase from 'pocketbase';
+import PocketBase, { AuthRecord } from 'pocketbase';
 import { jwtDecode } from "jwt-decode";
 import { useInterval } from "usehooks-ts";
 import ms from "ms";
 import PocketContext from "./PocketContext";
+import { User } from "../types";
 
 const BASE_URL = process.env.PB_URL;
 const fiveMinutesInMs = ms("5 minutes");
@@ -19,24 +20,22 @@ const twoMinutesInMs = ms("2 minutes");
 export const PocketProvider: FC<PropsWithChildren> = ({ children }) => {
   const pb = useMemo(() => new PocketBase(BASE_URL), []);
 
-  const [token, setToken] = useState(pb.authStore.token);
-  const [user, setUser] = useState(pb.authStore.record);
+  const [user, setUser] = useState<AuthRecord|null>(pb.authStore.record);
 
   useEffect(() => {    
-    return pb.authStore.onChange((token, model) => {
-      setToken(token);
+    return pb.authStore.onChange((_token, model) => {
       setUser(model);
     });
   }, [pb]);
 
   const register = useCallback(async (email: string, password: string) => {
     return await pb
-      .collection("users")
+      .collection<User>("users")
       .create({ email, password, passwordConfirm: password });
   }, [pb]);
 
   const login = useCallback(async (email: string, password: string) => {
-    return await pb.collection("users").authWithPassword(email, password);
+    return await pb.collection<User>("users").authWithPassword(email, password);
   }, [pb]);
 
   const logout = useCallback(() => {
@@ -64,7 +63,7 @@ export const PocketProvider: FC<PropsWithChildren> = ({ children }) => {
   
   return (
     <PocketContext.Provider
-      value={{ register, login, logout, user, token, pb }}
+      value={{ register, login, logout, user, pb }}
     >
       {children}
     </PocketContext.Provider>

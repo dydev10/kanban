@@ -10,7 +10,7 @@ import usePocket from "./hooks/usePocket";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export default function KanbanBoard() {
-  const { pb, token } = usePocket();
+  const { pb, user } = usePocket();
   const queryClient = useQueryClient();
 
   const [isGuest, setIsGuest] = useState<boolean>(false);
@@ -45,12 +45,12 @@ export default function KanbanBoard() {
   const { data: boards  } = useQuery({
     queryKey: ['boards'],
     queryFn: () => fetchBoards(),
-    enabled: !!token
+    enabled: !!user
   }); 
   const { data: projects  } = useQuery({
     queryKey: ['projects'],
     queryFn: () => fetchProjects(),
-    enabled: !!token,
+    enabled: !!user,
   });
   const { data: columns  } = useQuery({
     queryKey: ['columns', selectedBoard],
@@ -211,7 +211,7 @@ export default function KanbanBoard() {
     });
   }
 
-  if (!token && !isGuest) {
+  if (!user && !isGuest) {
     return (
       <LoginForm
         isOpen
