@@ -7,7 +7,7 @@ interface ModalProps {
 }
 
 const LoginForm: FC<ModalProps> = ({ isOpen, onCancel }) => {
-  const { login } = usePocket();
+  const { login, authError } = usePocket();
 
   const [isTrying, setIsTrying] = useState<boolean>(false);
   const [email, setEmail] = useState<string>("");
@@ -22,10 +22,10 @@ const LoginForm: FC<ModalProps> = ({ isOpen, onCancel }) => {
     console.log('Trying to login...');
 
     setIsTrying(true);
-    const user = await login(email, password);
+    await login(email, password);
     setIsTrying(false);
 
-    console.log('Logged In user:', user);
+    console.log('Logged In user');
   };
 
   return (
@@ -71,8 +71,14 @@ const LoginForm: FC<ModalProps> = ({ isOpen, onCancel }) => {
                   </>
                 ) : "Sign In"
               }
-              
             </button>
+            {
+              !!authError && (
+                <div className="text-xs p-1 font-medium text-red-300 border border-red-300 rounded-xl">
+                  {authError}
+                </div>
+              )
+            }
           </form>
         </div>
       </div>

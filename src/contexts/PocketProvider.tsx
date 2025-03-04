@@ -21,10 +21,12 @@ export const PocketProvider: FC<PropsWithChildren> = ({ children }) => {
   const pb = useMemo(() => new PocketBase(BASE_URL), []);
 
   const [user, setUser] = useState<AuthRecord|null>(pb.authStore.record);
+  const [authError, setAuthError] = useState<string|null>(null);
 
   useEffect(() => {    
     return pb.authStore.onChange((_token, model) => {
       setUser(model);
+      setAuthError(null);
     });
   }, [pb]);
 
@@ -35,7 +37,15 @@ export const PocketProvider: FC<PropsWithChildren> = ({ children }) => {
   }, [pb]);
 
   const login = useCallback(async (email: string, password: string) => {
-    return await pb.collection<User>("users").authWithPassword(email, password);
+    try {
+      await pb.collection<User>("users").authWithPassword(email, password);
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error(error.message);
+        setAuthError(error.message);
+      }
+    }
+    return;
   }, [pb]);
 
   const logout = useCallback(() => {
@@ -63,7 +73,7 @@ export const PocketProvider: FC<PropsWithChildren> = ({ children }) => {
   
   return (
     <PocketContext.Provider
-      value={{ register, login, logout, user, pb }}
+      value={{ register, login, logout, user, pb, authError }}
     >
       {children}
     </PocketContext.Provider>
