@@ -9,6 +9,7 @@ interface ModalProps {
 const LoginForm: FC<ModalProps> = ({ isOpen, onCancel }) => {
   const { login } = usePocket();
 
+  const [isTrying, setIsTrying] = useState<boolean>(false);
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   
@@ -20,9 +21,11 @@ const LoginForm: FC<ModalProps> = ({ isOpen, onCancel }) => {
     e.preventDefault();
     console.log('Trying to login...');
 
-    login(email, password).then((user) => {
-      console.log('Logged In user:', user);
-    });
+    setIsTrying(true);
+    const user = await login(email, password);
+    setIsTrying(false);
+
+    console.log('Logged In user:', user);
   };
 
   return (
@@ -59,7 +62,17 @@ const LoginForm: FC<ModalProps> = ({ isOpen, onCancel }) => {
                 onChange={(e) => setPassword(e.target.value)}
               />
             </div>
-            <button type="submit" className="w-full text-lg py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-md">Sign In</button>
+            <button disabled={isTrying} type="submit" className="w-full flex items-center justify-center gap-2 text-lg py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-md">
+              {
+                isTrying ? (
+                  <>
+                    <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                    Signing In...
+                  </>
+                ) : "Sign In"
+              }
+              
+            </button>
           </form>
         </div>
       </div>
