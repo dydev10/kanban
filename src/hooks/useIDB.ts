@@ -37,34 +37,29 @@ const useIDB = (idbName: string, onUpgrade: (idb: IDBDatabase) => void) => {
       const request = objectStore.get(id);
 
       // listen to listen instead of transaction to get get from request result
-      request.onsuccess = (event: Event) => {
-        // Do something with the request.result!
-        console.log('Getting Done!',event);
-        console.log(`Fetched id: ${request.result.id}`);
+      request.onsuccess = () => {
         return resolve(request.result);
       };
       request.onerror = (event) => {
-        // Handle errors!
         console.trace(event);
         return reject();
       };
     });
   }, []);
 
-  const getAll = useCallback(<T>(collectionName: string): Promise<T[]> => {
+  const getAll = useCallback(<T>(collectionName: string, index?: string, indexId?: string): Promise<T[]> => {
     return new Promise<T[]>((resolve, reject) => {
       if (!db.current) return reject();
 
       const transaction = db.current.transaction([collectionName]);
       const objectStore = transaction.objectStore(collectionName);
-      const request = objectStore.getAll();
+      const request = index ? objectStore.index(index).getAll(indexId) : objectStore.getAll();
 
       // listen to request instead of transaction to get data from request result
       request.onsuccess = () => {
         return resolve(request.result);
       };
       request.onerror = (event) => {
-        // Handle errors!
         console.trace(event);
         return reject();
       };

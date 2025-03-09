@@ -25,8 +25,7 @@ const useOffline = () => {
     const taskStore = db.createObjectStore('tasks', { keyPath: 'id' });
     taskStore.createIndex('user', 'user', { unique: false });
     taskStore.createIndex('board', 'board', { unique: false });
-    taskStore.createIndex('project', 'project', { unique: false });
-    taskStore.createIndex('column', 'column', { unique: false });
+    taskStore.createIndex("board_user", ["board", "user"], { unique: false });
   }, []);
   const { connect, get, getAll, add, del, update } = useIDB(IDBName, createDBSchema);
 
@@ -36,7 +35,7 @@ const useOffline = () => {
     
     // Add default board
     await add<Board>("boards", { id: 'default_guest_board', name: "Kanban Default" });
-    // await add<Board>("boards", { id: 'second_guest_board', name: "Second Board" });
+    await add<Board>("boards", { id: 'second_guest_board', name: "Second Board" });
     // Add project
     await add<Project>("projects", { id: 'default_guest_project', title: 'Guest Project' });
     // Add columns
@@ -55,6 +54,13 @@ const useOffline = () => {
       title: 'Drag Me',
       column: 'default_column_0',
       board: 'default_guest_board',
+      user: sessionId,
+      project: 'default_guest_project',
+    });
+    await add<Task>("tasks", {
+      title: 'Second B Task',
+      column: 'default_column_1',
+      board: 'second_guest_board',
       user: sessionId,
       project: 'default_guest_project',
     });

@@ -62,7 +62,7 @@ const useTasks = () => {
     }
     // Guest mode (temp without filter)
     if(session?.isGuest) {
-      return await idb.getAll<Task>("tasks");
+      return await idb.getAll<Task>("tasks", "board", boardId);
     }
   }, [pb, user, session, idb]);
 
