@@ -39,9 +39,9 @@ const useOffline = () => {
     // Add project
     await add<Project>("projects", { id: 'default_guest_project', title: 'Guest Project' });
     // Add columns
-    await add<BoardColumn>("columns", { id: 'default_column_todo', title: 'todo' });
-    await add<BoardColumn>("columns", { id: 'default_column_in_progress', title: 'in_progress' });
-    await add<BoardColumn>("columns", { id: 'default_column_done', title: 'done' });
+    await add<BoardColumn>("columns", { id: 'default_column_0', title: 'todo' });
+    await add<BoardColumn>("columns", { id: 'default_column_1', title: 'in_progress' });
+    await add<BoardColumn>("columns", { id: 'default_column_2', title: 'done' });
     
     console.log('Seeding Done!');
     
