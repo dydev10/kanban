@@ -22,7 +22,7 @@ export interface Project {
 export interface BoardColumn {
   id: string;
   title: string;
-  board: string;
+  board?: string;
 }
 
 export interface Task {
