@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import useIDB from "./useIDB";
-import { Board, BoardColumn, Project } from "../types";
+import { Board, BoardColumn, Project, Task } from "../types";
 
 export type GuestSession = {
   id: string,
@@ -31,20 +31,36 @@ const useOffline = () => {
   const { connect, get, getAll, add, del, update } = useIDB(IDBName, createDBSchema);
 
 
-  const seedOfflineDB = useCallback(async () => {
+  const seedOfflineDB = useCallback(async (sessionId: string) => {
     console.log('Seeding db...');
     
     // Add default board
-    await add<Board>("boards", { id: 'default_guest_board', name: "kanban_default" });
+    await add<Board>("boards", { id: 'default_guest_board', name: "Kanban Default" });
+    // await add<Board>("boards", { id: 'second_guest_board', name: "Second Board" });
     // Add project
     await add<Project>("projects", { id: 'default_guest_project', title: 'Guest Project' });
     // Add columns
     await add<BoardColumn>("columns", { id: 'default_column_0', title: 'todo' });
     await add<BoardColumn>("columns", { id: 'default_column_1', title: 'in_progress' });
     await add<BoardColumn>("columns", { id: 'default_column_2', title: 'done' });
+
+    // Add sample tasks to ez try drag and drop
+    await add<Task>("tasks", {
+      title: 'Already Finished',
+      column: 'default_column_2',
+      board: 'default_guest_board',
+      user: sessionId,
+    });
+    await add<Task>("tasks", {
+      title: 'Drag Me',
+      column: 'default_column_0',
+      board: 'default_guest_board',
+      user: sessionId,
+      project: 'default_guest_project',
+    });
+
     
     console.log('Seeding Done!');
-    
   }, [add]);
 
   const setDBSession = useCallback(async (guestSession: GuestSession) => {
@@ -67,7 +83,7 @@ const useOffline = () => {
             isOffline: false,
           }; 
           try {
-            await seedOfflineDB();
+            await seedOfflineDB(currentSession.id);
             await setDBSession(currentSession);
           } catch (error) {
             console.error(error)
