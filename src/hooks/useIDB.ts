@@ -11,8 +11,7 @@ const useIDB = (idbName: string, onUpgrade: (idb: IDBDatabase) => void) => {
         reject(e);
       };
   
-      idbOpenRequest.onsuccess = (event) => {
-        console.log('Success DB open', event);
+      idbOpenRequest.onsuccess = () => {
         // check if upgrade event is already triggered, because it already resolved this promise
         if (!upgrade) {
           db.current = idbOpenRequest.result;
@@ -61,9 +60,7 @@ const useIDB = (idbName: string, onUpgrade: (idb: IDBDatabase) => void) => {
       const request = objectStore.getAll();
 
       // listen to request instead of transaction to get data from request result
-      request.onsuccess = (event: Event) => {
-        console.log('Getting All Done!',event);
-        console.log(`Fetched results: ${request.result}`);
+      request.onsuccess = () => {
         return resolve(request.result);
       };
       request.onerror = (event) => {
@@ -86,8 +83,7 @@ const useIDB = (idbName: string, onUpgrade: (idb: IDBDatabase) => void) => {
           ...data,
         });
 
-      transaction.oncomplete = (event) => {
-        console.log('Adding Done!', event);
+      transaction.oncomplete = () => {
         return resolve();
       };
       transaction.onerror = (event) => {
@@ -106,8 +102,7 @@ const useIDB = (idbName: string, onUpgrade: (idb: IDBDatabase) => void) => {
         .objectStore(collectionName)
         .delete(id);
 
-      transaction.oncomplete = (event) => {
-        console.log('Deleting Done!', event);
+      transaction.oncomplete = () => {
         return resolve();
       };
       transaction.onerror = (event) => {
@@ -132,7 +127,6 @@ const useIDB = (idbName: string, onUpgrade: (idb: IDBDatabase) => void) => {
         return reject();
       };
       requestGet.onsuccess = () => {
-        console.log(`Fetched id: ${requestGet.result.id}`);
         if (requestGet.result) {
           const doc = requestGet.result;
           const newDoc = {
@@ -144,8 +138,7 @@ const useIDB = (idbName: string, onUpgrade: (idb: IDBDatabase) => void) => {
           requestUpdate.onerror = (event) => {
             console.trace(event);
           };
-          requestUpdate.onsuccess = (event) => {
-            console.log('Updating Done!', event);
+          requestUpdate.onsuccess = () => {
             return resolve();
           };
         } else {
