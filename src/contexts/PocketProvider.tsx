@@ -12,23 +12,35 @@ import { useInterval } from "usehooks-ts";
 import ms from "ms";
 import PocketContext from "./PocketContext";
 import { User } from "../types";
+import usePageLifecycle from "../hooks/usePageLifecycle";
 
 const BASE_URL = process.env.PB_URL;
 const fiveMinutesInMs = ms("5 minutes");
 const twoMinutesInMs = ms("2 minutes");
 
 export const PocketProvider: FC<PropsWithChildren> = ({ children }) => {
+  const { getPageState } = usePageLifecycle(() => {
+    handlePageStateChange();
+  });
   const pb = useMemo(() => new PocketBase(BASE_URL), []);
 
   const [user, setUser] = useState<AuthRecord|null>(pb.authStore.record);
   const [authError, setAuthError] = useState<string|null>(null);
 
-  useEffect(() => {    
-    return pb.authStore.onChange((_token, model) => {
-      setUser(model);
-      setAuthError(null);
-    });
-  }, [pb]);
+  const checkExpiredToken = useCallback((token: string, onExpired: () => void, bufferMs?: number, ) => {
+    const decoded = jwtDecode(token);
+    const tokenExpiration = decoded.exp; // Already in seconds
+    const currentTime = Date.now() / 1000; // Convert current time to seconds
+    let checkTime = currentTime;
+    if (bufferMs) {
+      const bufferTime = bufferMs / 1000; // Convert buffer to seconds
+      checkTime += bufferTime
+    }
+
+    if (tokenExpiration && tokenExpiration < checkTime) {
+      onExpired();
+    }
+  }, []);
 
   const register = useCallback(async (email: string, password: string) => {
     return await pb
@@ -53,25 +65,43 @@ export const PocketProvider: FC<PropsWithChildren> = ({ children }) => {
     pb.authStore.clear();
   }, [pb]);
 
+  const handlePageStateChange = useCallback(() => {
+    const newState = getPageState();
+    if (newState === 'active' && pb.authStore.token) {
+      checkExpiredToken(pb.authStore.token, logout);
+    }
+  }, [pb, logout, getPageState, checkExpiredToken]);
 
   const refreshSession = useCallback(async () => {
     const token = pb.authStore.token;
     if (!token || !pb.authStore.isValid) return;
-    
-    const decoded = jwtDecode(token);
-    const tokenExpiration = decoded.exp; // Already in seconds
-    const currentTime = Date.now() / 1000; // Convert current time to seconds
-    const bufferTime = fiveMinutesInMs / 1000; // Convert buffer to seconds
 
-    if (tokenExpiration && tokenExpiration < currentTime + bufferTime) {
+    checkExpiredToken(token, () => {
       console.log("Refreshing access...");
-      await pb.collection("users").authRefresh();
-    }
-  }, [pb]);
+      pb.collection("users").authRefresh().then(() => {
+        console.log("Token Refresh Done.");
+      });
+    }, fiveMinutesInMs);
+    
+  }, [pb, checkExpiredToken]);
 
   // useInterval(refreshSession, token ? twoMinutesInMs : null);
   useInterval(refreshSession, pb.authStore.token ? twoMinutesInMs : null);
   
+  useEffect(() => { 
+    // verify token on mount
+    if (pb.authStore.token) {
+      checkExpiredToken(pb.authStore.token, () => {
+        logout();
+      });
+    }
+    
+    pb.authStore.onChange((_token, model) => {
+      setUser(model);
+      setAuthError(null);
+    });
+  }, [pb, checkExpiredToken, logout]);
+
   return (
     <PocketContext.Provider
       value={{ register, login, logout, user, pb, authError }}
