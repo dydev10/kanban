@@ -115,7 +115,12 @@ const useTasks = () => {
     }
   }, [pb, user, session, idb]);
 
+  const getGuestId = useCallback(() => {
+    return session?.id
+  }, [session])
+
   return {
+    getGuestId,
     getBoards,
     getProjects,
     getColumns,

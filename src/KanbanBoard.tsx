@@ -25,12 +25,12 @@ export default function KanbanBoard() {
   const { data: boards  } = useQuery({
     queryKey: ['boards'],
     queryFn: () => TaskAPI.getBoards(),
-    enabled: !!user
+    enabled: !!user || isGuest
   }); 
   const { data: projects  } = useQuery({
     queryKey: ['projects'],
     queryFn: () => TaskAPI.getProjects(),
-    enabled: !!user,
+    enabled: !!user || isGuest,
   });
   const { data: columns  } = useQuery({
     queryKey: ['columns', selectedBoard],
@@ -71,7 +71,7 @@ export default function KanbanBoard() {
   const createTaskMutation = useMutation({
     mutationFn: async (params :TaskCreateParams) => TaskAPI.createTasks(params),
     onMutate: async ({ title, column, project }: { title: string, column: string, project?: string }) => {
-      const userId = pb.authStore.record?.id;
+      const userId = pb.authStore.record?.id || TaskAPI.getGuestId();
       if (!userId) throw new Error("User not authenticated");
       if (!selectedBoard) throw new Error(" No board selected");
 
