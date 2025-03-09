@@ -36,10 +36,10 @@ const LoginForm: FC<ModalProps> = ({ isOpen, onCancel }) => {
         </div>
         <div className="w-1/2 p-8 flex flex-col items-center">
           <div className="w-full flex flex-col items-center mb-6">
-            <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">Login</h2>
+            <h2 className="text-3xl font-semibold text-gray-900 dark:text-purple-500">Login</h2>
             <button onClick={onCancel} className="absolute top-4 right-4 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">✖</button>
           </div>
-          <form className="space-y-5 w-full" onSubmit={handleComplete}>
+          <form className="space-y-5 w-full flex flex-col items-center" onSubmit={handleComplete}>
             <div>
               <label className="block text-sm font-medium text-gray-900 dark:text-gray-300">Email</label>
               <input
@@ -62,7 +62,7 @@ const LoginForm: FC<ModalProps> = ({ isOpen, onCancel }) => {
                 onChange={(e) => setPassword(e.target.value)}
               />
             </div>
-            <button disabled={isTrying} type="submit" className="w-full flex items-center justify-center gap-2 text-lg py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-md">
+            <button disabled={isTrying} type="submit" className="w-fit flex items-center justify-center gap-2 text-lg p-2 bg-purple-600 dark:bg-purple-500 text-white rounded-md">
               {
                 isTrying ? (
                   <>
@@ -79,6 +79,9 @@ const LoginForm: FC<ModalProps> = ({ isOpen, onCancel }) => {
                 </div>
               )
             }
+            <button disabled={isTrying} onClick={onCancel} className="w-fit flex items-center justify-center gap-2 text-sm underline underline-offset-4 bg-none dark:bg-none text-pink-300 hover:text-orange-300">
+              Guest Mode
+            </button>
           </form>
         </div>
       </div>
