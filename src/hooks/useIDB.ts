@@ -1,14 +1,9 @@
 import { useCallback, useRef } from "react";
 
-export type IDBConnectResponse = {
-  db: IDBDatabase,
-  upgrade?: boolean,
-};
-
-const useIDB = (idbName: string) => {
+const useIDB = (idbName: string, onUpgrade: (idb: IDBDatabase) => void) => {
   const db = useRef<IDBDatabase>(null);
   const connect = useCallback(() => {
-    return new Promise<IDBConnectResponse>((resolve, reject) => {
+    return new Promise<IDBDatabase>((resolve, reject) => {
       const idbOpenRequest = window.indexedDB.open(idbName);
       let upgrade = false;
       idbOpenRequest.onerror = (e) => {
@@ -21,7 +16,7 @@ const useIDB = (idbName: string) => {
         // check if upgrade event is already triggered, because it already resolved this promise
         if (!upgrade) {
           db.current = idbOpenRequest.result;
-          resolve({ db: idbOpenRequest.result });
+          resolve(idbOpenRequest.result);
         }
       };
   
@@ -29,10 +24,10 @@ const useIDB = (idbName: string) => {
         console.log('DB upgrade needed', event);
         upgrade = true;
         db.current = idbOpenRequest.result;
-        resolve({ db: idbOpenRequest.result, upgrade });
+        onUpgrade(db.current);
       };
     });
-  }, [idbName]);
+  }, [idbName, onUpgrade]);
 
   const get = useCallback(<T>(collectionName: string, id: string): Promise<T> => {
     return new Promise<T>((resolve, reject) => {
@@ -97,7 +92,7 @@ const useIDB = (idbName: string) => {
       };
       transaction.onerror = (event) => {
         console.trace(event);
-        return reject();
+        return reject(event);
       };
     });
   }, []);
