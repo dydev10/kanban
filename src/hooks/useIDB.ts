@@ -79,14 +79,17 @@ const useIDB = (idbName: string) => {
     });
   }, []);
 
-  const add = useCallback(<T>(collectionName: string, data: Partial<T>): Promise<void> => {
+  const add = useCallback(<T extends { id?: string }>(collectionName: string, data: Partial<T>): Promise<void> => {
     return new Promise<void>((resolve, reject) => {
       if (!db.current) return reject();
 
       const transaction = db.current.transaction([collectionName], 'readwrite');
       transaction
         .objectStore(collectionName)
-        .add(data);
+        .add({
+          id: data.id || crypto.randomUUID(),
+          ...data,
+        });
 
       transaction.oncomplete = (event) => {
         console.log('Adding Done!', event);
