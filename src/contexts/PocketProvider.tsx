@@ -65,12 +65,16 @@ export const PocketProvider: FC<PropsWithChildren> = ({ children }) => {
     pb.authStore.clear();
   }, [pb]);
 
+  const verifyToken = useCallback(async () => {
+    return pb.collection("users").authRefresh();
+  }, [pb]);
+
   const handlePageStateChange = useCallback(() => {
     const newState = getPageState();
-    if (newState === 'active' && pb.authStore.token) {
-      checkExpiredToken(pb.authStore.token, logout);
+    if (newState === 'active' && user && !pb.authStore.isValid) {
+      logout();
     }
-  }, [pb, logout, getPageState, checkExpiredToken]);
+  }, [pb, user, logout, getPageState,]);
 
   const refreshSession = useCallback(async () => {
     const token = pb.authStore.token;
@@ -78,12 +82,17 @@ export const PocketProvider: FC<PropsWithChildren> = ({ children }) => {
 
     checkExpiredToken(token, () => {
       console.log("Refreshing access...");
-      pb.collection("users").authRefresh().then(() => {
-        console.log("Token Refresh Done.");
-      });
+      verifyToken()
+        .then(() => {
+          console.log("Token Refresh Done.");
+        })
+        .catch((err: Error) => {
+          console.error('Session refresh failed, forcing logout...', err);
+          logout();
+        });
     }, fiveMinutesInMs);
     
-  }, [pb, checkExpiredToken]);
+  }, [pb, checkExpiredToken, verifyToken, logout]);
 
   // useInterval(refreshSession, token ? twoMinutesInMs : null);
   useInterval(refreshSession, pb.authStore.token ? twoMinutesInMs : null);
