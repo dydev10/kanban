@@ -15,18 +15,19 @@ const useOffline = () => {
 
   const createDBSchema = (db: IDBDatabase) => {
     console.log('Creating DB Schema...');
-  
-    const sessionStore = db.createObjectStore('sessions', { keyPath: 'id' });
+    
+    // Session store for guest session and offline mode
+    db.createObjectStore('sessions', { keyPath: 'id' });
     
     // add tasks schema similar to sqlite schema used in backend
     db.createObjectStore('boards', { keyPath: 'id'});
     db.createObjectStore('projects', { keyPath: 'id'});
     db.createObjectStore('columns', { keyPath: 'id'});
-    db.createObjectStore('tasks', { keyPath: 'id'});
-
-    // temp
-    sessionStore.createIndex('isGuest', 'isGuest', { unique: false });
-    sessionStore.createIndex('isOffline', 'isOffline', { unique: false });
+    const taskStore = db.createObjectStore('tasks', { keyPath: 'id' });
+    taskStore.createIndex('user', 'user', { unique: false });
+    taskStore.createIndex('board', 'board', { unique: false });
+    taskStore.createIndex('project', 'project', { unique: false });
+    taskStore.createIndex('column', 'column', { unique: false });
   };
 
   const setDBSession = useCallback(async (guestSession: GuestSession) => {
